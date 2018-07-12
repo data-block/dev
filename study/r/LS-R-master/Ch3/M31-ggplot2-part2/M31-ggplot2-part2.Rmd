@@ -1,0 +1,87 @@
+---
+title: "Untitled"
+author: "Sim"
+date: "2018년 4월 28일"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+a <- ggplot(data = mpg) +
+  geom_point(aes(x = displ, y = hwy, color = factor(cyl)))
+b <- ggplot(data = mpg) +
+  geom_point(aes(x = displ, y = hwy, color = factor(cyl)),
+             position = "jitter")
+grid.arrange(a, b, nrow=1, ncol=2)
+```
+
+
+```{r}
+a <- ggplot(data = mpg) + 
+  geom_boxplot(aes(x = class, y = hwy))
+b <- ggplot(data = mpg) + 
+  geom_boxplot(aes(x = class, y = hwy)) +
+  coord_flip()
+grid.arrange(a, b, nrow=1, ncol=2)
+```
+
+
+```{r}
+mpg$displ_fac <- factor(round(mpg$displ,0))
+a <- ggplot(data = mpg) + 
+  geom_bar(aes(x = displ_fac))
+b <- ggplot(data = mpg) + 
+  geom_bar(aes(x = displ_fac, color = class))
+c <- ggplot(data = mpg) +
+  geom_bar(aes(x = displ_fac, fill = class))
+grid.arrange(a, b, c, nrow=1, ncol=3)
+```
+
+
+
+```{r}
+a <- ggplot(data = mpg) +
+  geom_bar(aes(x = displ_fac, fill = class), position = "fill")
+b <- ggplot(data = mpg) +
+  geom_bar(aes(x = displ_fac, fill = class), position = "dodge")
+grid.arrange(a, b, nrow=1, ncol=2)
+```
+
+
+
+```{r}
+a <- ggplot(data = mpg) + 
+  geom_bar(aes(x = class, fill = class))
+b <- a + coord_flip()
+c <- a + coord_polar()
+a
+b
+c
+```
+
+```{r, eval=FALSE}
+# open -> save -> close
+png("output_file.png")
+ggplot(data = mpg) + 
+  geom_bar(aes(x = class, fill = class)) + 
+  coord_flip()
+dev.off()
+```
+
+
+```{r, eval=FALSE}
+library(plotly)
+ggplotly(a)
+ggplotly(b)
+```
+
+
+```{r}  
+head(mpg[,c("displ", "hwy", "cyl")],10)
+```

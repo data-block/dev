@@ -1,0 +1,8 @@
+Name,amount,date,result
+Lee,400,2016-01-01,confirmed
+Young,300,2016-01-05,confirmed
+Kim,700,2016-01-06,confirmed
+Choi,800,2016-01-07,canceled
+Yoon,500,2016-01-11,confirmed
+Jang,200,2016-01-13,confirmed
+Park,300,2016-01-20,canceled

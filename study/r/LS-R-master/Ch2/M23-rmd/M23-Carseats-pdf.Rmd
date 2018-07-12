@@ -1,0 +1,71 @@
+---
+title: "rmd 한글 template "
+author: "Learning Spoons"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: true
+    # pandoc_args: [
+    #   "-V", "classoption=twocolumn"
+    # ]
+  smaller: true
+mainfont: NanumGothic
+classoption: a4paper
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Carseat 소개  
+
+```{r, message=FALSE}
+library(ISLR)
+library(dplyr)
+library(ggplot2)
+str(Carseats) 
+```
+
+## Focus City
+
+*소득*이 높고 **도시**의 평균 연령이 30대인 곳의
+판매량을 알아보고 싶습니다.  
+
+아래에 해당 도시(`r nrow(Carseats)`개)들의 변수를 표현합니다.
+
+```{r}
+focusCity <- Carseats %>% 
+  filter(Income > 100) %>%
+  filter(Age >= 30 & Age < 40) %>%
+  mutate(AdvPerCapita = Advertising/Population) %>%
+  select(Sales, Income, Age, Population, Education, AdvPerCapita) %>%
+  arrange(Sales)
+print(focusCity)
+```
+
+## Income vs Sales
+
+```{r}
+doFacetWrap <- FALSE
+a <- ggplot(data = Carseats, aes(x = Income, y = Sales)) + 
+  geom_point(aes(shape = Urban, color = US))
+if (doFacetWrap) {
+  a <- a + facet_wrap(~ floor(Age/10))
+}
+print(a)
+```
+
+Your comment!
+
+## Income vs Sales
+
+```{r}
+doFacetWrap <- TRUE
+a <- ggplot(data = Carseats, aes(x = Income, y = Sales)) + 
+  geom_point(aes(shape = Urban, color = US))
+if (doFacetWrap) {
+  a <- a + facet_wrap(~ floor(Age/10))
+}
+print(a)
+```

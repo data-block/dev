@@ -1,0 +1,4 @@
+Name,amount,date,result
+Park,400,2015-01-01,confirmed
+Kim,800,2015-01-02,confirmed
+Choi,500,2015-01-05,canceled

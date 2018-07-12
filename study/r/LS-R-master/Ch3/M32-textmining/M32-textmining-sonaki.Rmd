@@ -1,0 +1,64 @@
+---
+title: "Word Cloud (kor) - sonaki"
+author: "Sim"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
+## 0. Setup  
+
+```{r}
+library(tm) # for text mining
+library(SnowballC) # for text stemming
+library(wordcloud) # word-cloud generator 
+library(RColorBrewer) # color palettes
+library(ggplot2)
+library(dplyr)
+library(KoNLP) # Korean Natural Language Processing
+library(pdftools) # Extract text from pdf
+```
+
+## 1. Infile and prepare text (`docs`)  
+## 2. Cleanup the text (`docs`)  
+
+```{r}
+text <- pdf_text("../script/sonaki.pdf")
+docs <- sapply(text, extractNoun, USE.NAMES = F) # Apply extract Noun
+docs <- unlist(docs)
+docs <- Filter(function(x) {nchar(x) >= 2}, docs) # Character length >= 2
+head(docs, 10)
+```
+
+## 3. Arriving to frequency table! (`docs` to `freqTable`)
+
+```{r}
+freqTable <- data.frame(table(docs))
+names(freqTable) <- c("word", "freq")
+freqTable <- freqTable %>% arrange(desc(freq))
+head(freqTable)
+```
+
+## 4. Render Bar Chart  (play with `freqTable`)
+
+```{r}
+ggplot(head(freqTable,20)) +
+  geom_bar(aes(x=reorder(word, freq), y=freq), stat="identity") +
+  coord_flip()
+```
+
+## 5. Render Word Cloud (play with `freqTable`)
+
+```{r, warning = FALSE}
+wordcloud(words = freqTable$word, freq = freqTable$freq, 
+          min.freq = 1, max.words=100, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+```          

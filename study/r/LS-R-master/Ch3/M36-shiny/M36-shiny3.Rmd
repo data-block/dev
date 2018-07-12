@@ -1,0 +1,64 @@
+---
+title: "Step 3. Word Cloud (txt or pdf) (en or kr)"
+author: LearningSpoonsR
+output: 
+  flexdashboard::flex_dashboard:
+  runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+source("../../LSR.R")
+setLang("kr")
+activate(c("tm", "SnowballC", "wordcloud2", "KoNLP", "pdftools"))
+activate(c("ggplot2", "dplyr", "RColorBrewer"))
+```
+
+Inputs {.sidebar}
+-------------------------------------
+
+```{r}
+selectInput(inputId = "theFile", label = "Choose File", 
+            choice = list.files("../script/"))
+selectInput(inputId = "lang", label = "Language",
+            choice = c("English", "Korean"))
+```
+ 
+Column {data-width=500}
+-------------------------------------
+    
+### Barplot  
+ 
+```{r}  
+# input <- NULL; input$theFile <- "appeal.txt"; input$lang <- "kr"  
+renderText({paste0("../script/", input$theFile)})  
+# renderPlot({
+#   docs <- getDocs(paste0("../script/", input$theFile), input$lang)
+#   freqTable <- cleanDocsGenerateFreqTable(docs, input$lang)
+#   g <- ggplot(head(freqTable,20)) +
+#     geom_bar(aes(x=reorder(word, freq), y=freq), stat="identity") +
+#     coord_flip()
+#   print(g)
+# })  
+```   
+  
+Column {data-width=500}  
+-------------------------------------
+  
+### Word Cloud  
+
+```{r, warning = FALSE, fig.width=12, fig.height=10}
+# renderText({input$theFile})
+renderWordcloud2({
+  docs <- getDocs(paste0("../script/", input$theFile), input$lang)
+  freqTable <- cleanDocsGenerateFreqTable(docs, input$lang)
+  # w <- wordcloud(words = freqTable$word, freq = freqTable$freq,
+  #                min.freq = 1, max.words=200, random.order=FALSE, rot.per=0.35,
+  #                colors=brewer.pal(8, "Dark2"))
+  w <- wordcloud2(freqTable)
+  print(w)
+})
+```
+
+  

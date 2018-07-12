@@ -1,0 +1,210 @@
+---
+title: "L2 prep M0, M1, M3"
+author: "Learning Spoons"
+date: "2018년 4월 17일"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, eval=FALSE}
+install.packages("package_name")
+library(package_name)
+```
+
+```{r, eval=FALSE}
+# csv
+dataset <- 
+  read.csv("filename.csv", header = TRUE, stringsAsFactors = FALSE)
+                           # if the first line is "header" (default)
+dataset <- 
+  read.csv("filename.csv", header = FALSE, stringsAsFactors = FALSE)
+                           # if no "header" in the data file
+write.csv(dataset, "filename.csv")
+
+# txt
+# read.csv 대신에 read.table
+# write.csv 대신에 write.table
+dataset <- read.table(나머지 문법은 read.csv와 똑같고 sep 옵션 추가)
+# ex) sep = ","
+#     sep = " "
+#     sep = "-"
+
+# xls, xlsx
+install.packages("readxl") # 최초 사용시에만 설치 필요  
+library(readxl)
+dataset <- read_excel("filename.xlsx") 
+           # if first line is "header"
+dataset <- read_excel("filename.xlsx", col_names=FALSE)
+           # if no "header" in the data file
+
+# rda - 데이터셋 한 개 저장 
+load("filename.rda")
+save(dataset, "filename.rda")
+
+# rdata - 현재 메모리에 있는 모든 변수 저장
+load("2018-04-17.rdata")
+save(dataset, "2018-04-17.rdata")
+```
+
+## Module 1
+
+```{r, eval=FALSE}
+install.packages("ISLR")
+library(ISLR)
+class(Carseats)
+head(Carseats)    # 처음 6개 관찰값
+tail(Carseats,5)  # 처음 6개 관찰값
+View(Carseats)    # "Viewer"에 보여줌
+dim(Carseats)     # 차원 (dimension)
+str(Carseats)     # 구조 (structure)
+summary(Carseats) # 기초 통계량 (descriptive stat)
+```
+
+```{r}
+# install.packages("ISLR")
+library(ISLR)
+class(Carseats)
+head(Carseats)    # 처음 6개 관찰값
+tail(Carseats,5)  # 처음 6개 관찰값
+View(Carseats)    # "Viewer"에 보여줌
+dim(Carseats)     # 차원 (dimension)
+str(Carseats)     # 구조 (structure)
+summary(Carseats) # 기초 통계량 (descriptive stat)
+```
+
+```{r}
+# A data frame with 400 observations on the following 11 variables.
+# `Sales` Unit sales (in thousands) at each location
+# `CompPrice` Price charged by competitor at each location
+# `Income` Community income level (in thousands of dollars)
+# `Advertising` Local advertising budget for company at each location 
+#   (in thousands of dollars)
+# `Population` Population size in region (in thousands)
+# `Price` Price company charges for car seats at each site
+# `ShelveLoc` A factor with levels Bad, Good and Medium indicating 
+#    the quality of the shelving location for the car seats at each site
+# `Age` Average age of the local population
+# `Education` Education level at each location
+# `Urban` A factor with levels No and Yes to indicate whether the store is 
+#    in an urban or rural location
+# `US`` A factor with levels No and Yes to indicate whether the store is in the US or not
+#  James, G., Witten, D., Hastie, T., and Tibshirani, R. (2013) 
+#  An Introduction to Statistical Learning with applications in R, 
+#  www.StatLearning.com, Springer-Verlag, New York
+```
+
+dplyr
+
+```{r}
+head(Carseats)
+```
+
+```{r, message=FALSE}
+# install.packages("dplyr")
+library(dplyr)
+```
+
+```{r}
+Carseats$Revenue <- Carseats$Sales
+```
+
+Basics
+
+```{r, eval=FALSE}
+# rename (이름 바꾸기) 
+Carseats <- rename(Carseats, Sales = Revenue)
+names(Carseats)[names(Carseats)=="Sales"] <- "Revenue"
+
+# filter (관찰값 추출, Row 추출)
+temp <- filter(Carseats, Income > 100)
+temp <- Carseats %>% filter(Income > 100)
+temp <- Carseats[Carseats$Income > 100,]
+
+temp <- filter(Carseats, Age >= 30 & Age < 40)
+temp <- Carseats %>% filter(Age >= 30 & Age < 40)
+temp <- Carseats[((Carseats$Age >= 30) & (Carseats$Age < 40)),]
+
+# select (변수 추출, Column 선택)
+temp <- select(Carseats, Income, Population)
+temp <- Carseats %>% select(Income, Population)
+temp <- Carseats[,c("Income", "Population")]
+
+# arrange (정렬)
+Carseats <- arrange(Carseats, Price)
+Carseats <- Carseats %>% arrange(Price)
+Carseats <- Carseats[order(Carseats$Price),]
+
+Carseats <- arrange(Carseats, desc(Price))
+Carseats <- Carseats %>% arrange(desc(Price))
+Carseats <- Carseats[order(Carseats$Price, decreasing = TRUE),]
+
+# mutate (새로운 변수)
+Carseats <- mutate(Carseats, 
+               AdvPerCapita = Advertising/Population,
+               RevPerCapita = Revenue/Population)
+Carseats <- Carseats %>% 
+  mutate(AdvPerCapita = Advertising/Population,
+         RevPerCapita = Revenue/Population)
+Carseats$AdvPerCapita <- Carseats$Advertising/Carseats$Population
+Carseats$RevPerCapita <- Carseats$Revenue/Carseats$Population
+
+Carseats <- mutate(Carseats, 
+                   AgeClass = ifelse(Age>=60, "Silver", "non-Silver"))
+Carseats <- Carseats %>% 
+  mutate(AgeClass = ifelse(Age>=60, "Silver", "non-Silver"))
+Carseats$AgeClass <- 
+  ifelse(Carseats$Age >= 60, "Silver", "non-Silver")
+```
+
+Advanced
+
+```{r}
+# successive treatments
+focusCity <- Carseats %>% 
+  filter(Income > 100) %>%
+  filter(Age >= 30 & Age < 40) %>%
+  mutate(AdvPerCapita = Advertising/Population) %>%
+  select(Revenue, Income, Age, Population, Education, AdvPerCapita) %>%
+  arrange(Revenue)
+print(focusCity)
+```
+
+
+```{r}
+Carseats %>%
+  mutate(AgeClass = 
+           ifelse(Age < 30, "Twenties", 
+                  ifelse(Age < 40, "Thirties", "FourtyAbove"))) %>%
+  group_by(AgeClass) %>%
+  summarise(avgRevenue = mean(Sales))
+```
+
+
+appendix
+
+```{r, eval=FALSE}
+# C, C++
+for(int i=1; i <=10, i=i+1) {
+  printf("value of i: %d\n", i);
+}
+
+# MATLAB
+for i=1:10 {
+  disp("value of i: %d", i)
+}
+
+# Python
+for i in range(1, 11):
+  print "value of i: %d" % (i)
+
+## R
+for (i in 1:10) {
+  print(paste("value of i:", i))
+}
+```
+
+
+

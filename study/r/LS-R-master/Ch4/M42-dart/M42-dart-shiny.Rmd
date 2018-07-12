@@ -1,0 +1,50 @@
+---
+title: "Daily DART Focus"
+author: "LearningSpoonsR"
+date: "`r Sys.Date()`"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    source: embed
+---
+
+```{r setup, include=FALSE}
+source("../../LSR.R")
+activate(c("shiny","flexdashboard"))
+```
+
+Selections {.sidebar}
+===============================
+
+시작일부터 종료일까지의 키워드에 해당하는 공시자료를 검색합니다.
+
+```{r}
+dateInput("start_dt", "시작일", Sys.Date()-3)
+dateInput("end_dt",   "종료일", Sys.Date()-1)
+selectInput("keyword", "키워드", c("매수", "합병", "분할", "감자", "취득"))
+```
+
+--------------------------------------
+
+아래에 `rcp_no`를 긁어붙이면 http 주소가 생성됩니다. 
+
+```{r, echo=FALSE}
+textInput("rcp_no", "rcp_no")
+renderText({
+  link <- paste0("http://dart.fss.or.kr/dsaf001/main.do?rcpNo=",
+                 input$rcp_no)
+  link
+})
+```
+
+Record including Keyword
+===================================== 
+
+```{r}
+source("dart.R")
+renderTable({
+  dart <- loadDART(input$start_dt, input$end_dt)
+  want <- dartLookup(dart, input$keyword)
+  want
+})
+```

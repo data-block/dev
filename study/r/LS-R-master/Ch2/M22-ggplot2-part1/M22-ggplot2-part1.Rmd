@@ -1,0 +1,201 @@
+---
+title: "L2 prep M2"
+author: "Learning Spoons"
+date: "2018년 4월 17일"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(fig.width=2, fig.height=2)
+```
+
+Module 2: ggplot2
+
+```{r}
+library(ggplot2)
+? mpg
+mpg 
+class(mpg) 
+# mpg has attributes for multiple classes!
+# tbl is from package "tibble" and can be handy.
+```
+
+bigger engine less mileage?
+
+```{r, echo=FALSE}
+fig_cnt <- 0
+```
+
+```{r}
+# engine size
+ggplot(data=mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+```
+```{r, echo=FALSE}
+fig_cnt <- fig_cnt + 1
+```
+[L2.M2.Fig `r fig_cnt`]
+
+```{r, eval=FALSE}
+# template
+ggplot(data = <DATA>) +
+  <GEOM_FUNCTION>(mapping = aes(<MAPPING>))
+```
+
+Your question confirmed?
+
+Additional questions?
+
+> What are the six points?  
+> Same tendency among the different classes?   
+`r unique(mpg$class)`
+
+```{r}
+library(gridExtra)
+a <- ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, color = class))
+b <- ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, size = class))
+grid.arrange(a, b, nrow=1, ncol=2)
+```
+
+
+```{r}
+a <- ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, alpha = class))
+b <- ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy, shape = class))
+grid.arrange(a, b, nrow=1, ncol=2)
+```
+
+    
+discussion on size > alpha > color = shape
+
+facets
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_wrap(~ class, nrow = 2)
+```
+```{r, echo=FALSE}
+fig_cnt <- fig_cnt + 1
+```
+[L2.M2.Fig `r fig_cnt`]
+
+```{r}
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  facet_grid(drv ~ cyl)
+```
+```{r, echo=FALSE}
+fig_cnt <- fig_cnt + 1
+```
+[L2.M2.Fig `r fig_cnt`]
+
+discussion: facet or not?
+
+
+## 
+
+```{r}
+# point vs smooth
+a <- ggplot(data = mpg) +
+  geom_point(mapping = aes(x = displ, y = hwy))
+b <- ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+grid.arrange(a, b, nrow=1, ncol=2)
+```
+
+
+```{r}
+# aes extends or overwrites
+a <- ggplot(data = mpg) +
+  geom_smooth(mapping = aes(x = displ, y = hwy))
+b <- ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_smooth()
+grid.arrange(a, b, nrow=1, ncol=2)
+```
+
+```{r}
+# point + smooth
+a <- ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_smooth(aes(linetype = drv))
+b <- ggplot(data = mpg, mapping = aes(x = displ, y = hwy)) +
+  geom_smooth(aes(linetype = drv)) +
+  geom_point(aes(color = drv)) # line type ignored
+grid.arrange(a, b, nrow=1, ncol=2)
+```
+   
+```{r}
+library(ggplot2)
+library(ISLR)   
+str(Carseats)
+```
+
+```{r}
+a <- ggplot(data = Carseats, aes(x = Income, y = Sales)) + 
+  geom_point(aes(shape = Urban, color = US))
+print(a)
+```
+
+```{r}
+a + facet_wrap(~ floor(Age/10))
+print(a)
+```
+
+```{r}
+doFacetWrap <- TRUE
+a <- ggplot(data = Carseats, aes(x = Income, y = Sales)) + 
+  geom_point(aes(shape = Urban, color = US))
+if (doFacetWrap) {
+  a <- a + facet_wrap(~ floor(Age/10))
+}
+print(a)
+```
+
+```{r}
+doFacetWrap <- FALSE
+a <- ggplot(data = Carseats, aes(x = Income, y = Sales)) + 
+  geom_point(aes(shape = Urban, color = US))
+if (doFacetWrap) {
+  a <- a + facet_wrap(~ floor(Age/10))
+}
+print(a)
+```
+
+```{r}
+# Peak - final project
+
+```
+
+
+
+
+
+
+appendix
+
+```{r, eval=FALSE}
+# C, C++
+for(int i=1; i <=10, i=i+1) {
+  printf("value of i: %d\n", i);
+}
+
+# MATLAB
+for i=1:10 {
+  disp("value of i: %d", i)
+}
+
+# Python
+for i in range(1, 11):
+  print "value of i: %d" % (i)
+
+## R
+for (i in 1:10) {
+  print(paste("value of i:", i))
+}
+```
+
+

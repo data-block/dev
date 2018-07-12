@@ -1,0 +1,163 @@
+---
+title: "KOSPI200 종목 분석 - Codes"
+author: "LearningSpoonsR "
+date: "`r Sys.Date()`"
+fontsize: 9pt
+output:
+  beamer_presentation:
+    theme: "CambridgeUS"
+    colortheme: "rose"
+    latex_engine: xelatex
+    # keep_tex: true
+    # template: myTemplate.tex
+    includes:
+      in_header: myRmdBeamerStyle/latex-topmatter.tex
+classoption: t
+mainfont: NanumGothic
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(background = '718CBA')
+# options(encoding = 'euc-kr')
+```
+
+## Nulla. Header
+
+```{r}
+---
+title: "KOSPI200 종목 분석"
+author: "LearningSpoonsR"
+date: "`r Sys.Date()`"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    source: embed
+---
+```
+
+## I. Setup
+
+```{r}
+{r setup, include=FALSE}
+source("../../LSR.R")
+activate("flexdashboard", "tidyverse", "quantmod", "xts", "dygraphs")
+setLang("kr")
+options(stringsAsFactors = FALSE)
+```
+
+## II. Sidebar
+
+```{r}
+{r, warning = FALSE}
+K200Members <- importK200Members()
+description <- read.csv("data/K200Descriptions.csv", header=TRUE)
+nameCode    <- paste(K200Members$Security_Name, K200Members$Code)
+selectInput("KScode", "종목명 + 종목코드", nameCode)
+```
+
+# III. Tab 1 - Main Text 
+
+## III-1. Row 1 - 종목 소개 
+
+```{r}
+{r}
+renderText({
+  # input <- NULL; input$KScode <- nameCode[73]
+  chosenCode  <- substr(input$KScode, nchar(input$KScode)-5, nchar(input$KScode))
+  desc <- description %>% filter(종목코드 == as.numeric(chosenCode))
+  msg  <- paste0(
+    "분석된 주식은 ", desc[1], "(", chosenCode, ")입니다. ",
+    desc[1], "의 주력 상품은 ", desc[4],
+    "이며, 산업분류로는 ", desc[3], "에 해당합니다. ",
+    "본사는 ", desc[9],
+    "에 위치하고 있고, 최초의 주식 상장 시기는 ",
+    desc[5], "입니다.  현재 회사 대표는 ", desc[7],
+    "이며, 웹사이트 주소는 ", desc[8], "입니다.")
+  msg
+})
+```
+
+## III-1. Row 2 - 장기 시계열 차트 
+
+```{r}
+{r}
+renderDygraph({
+  chosenCode  <- substr(input$KScode, nchar(input$KScode)-5, nchar(input$KScode))
+  chosenStock <- 
+    getSymbols(paste0(chosenCode,".KS"), auto.assign = FALSE)[,6] %>% na.locf()
+  dygraph(chosenStock) %>% dyRangeSelector()
+})
+```
+
+# IV. Tab 2 - Return, Volatility, and MDD
+
+## IV-1. Column 1
+
+```{r}
+### 단기간 수익률 및 변동성 
+{r}
+renderTable({
+  chosenCode  <- substr(input$KScode, nchar(input$KScode)-5, nchar(input$KScode))
+  chosenStock <- 
+    getSymbols(paste0(chosenCode,".KS"), auto.assign = FALSE)[,6] %>% na.locf()
+  ST       <- genSTLTmdd(chosenStock)[[1]]
+  ST[,3:4] <- apply(ST[,3:4], 2, function(x) round(as.numeric(x),2))
+  present  <- data.frame(ST[,2:4])
+  colnames(present) <- c("Ref.Date", "Return", "Vol.(p.a.)")
+  present
+})
+### 장기간 수익률 및 변동성 
+{r}
+renderTable({
+  chosenCode  <- substr(input$KScode, nchar(input$KScode)-5, nchar(input$KScode))
+  chosenStock <- 
+    getSymbols(paste0(chosenCode,".KS"), auto.assign = FALSE)[,6] %>% na.locf()
+  LT       <- genSTLTmdd(chosenStock)[[2]]
+  LT[,3:4] <- apply(LT[,3:4], 2, function(x) round(as.numeric(x),2))
+  present <- data.frame(period=rownames(LT), LT[,3:4])
+  colnames(present) <- c("Period", "Return(p.a.)", "Vol.(p.a.)")
+  present
+})
+```
+
+## 
+
+```{r}
+### Maximal Draw Down
+{r}
+renderText({
+  chosenCode  <- substr(input$KScode, nchar(input$KScode)-5, nchar(input$KScode))
+  chosenStock <- 
+    getSymbols(paste0(chosenCode,".KS"), auto.assign = FALSE)[,6] %>% na.locf()
+  mdd   <- genSTLTmdd(chosenStock)[[3]]
+  msg   <- paste0(
+    "해당 주식의 Maximal DrawDown은 ", index(mdd[[1]])[1], 
+    "(주가:", round(as.numeric(mdd[[1]][1]),0), ")부터 ",
+    index(mdd[[1]])[2], "(주가: ", round(as.numeric(mdd[[1]][2]),0),
+    ")까지 이며, 해당 기간의 낙폭은 ",
+    round(as.numeric(mdd[[2]][1])*100,2), "%입니다.")
+  msg
+})
+```
+
+## IV-2. Column 2
+
+```{r}
+### Calendar Year 
+{r}
+renderTable({
+  chosenCode  <- substr(input$KScode, nchar(input$KScode)-5, nchar(input$KScode))
+  chosenStock <- 
+    getSymbols(paste0(chosenCode,".KS"), auto.assign = FALSE)[,6] %>% na.locf()
+  yrPerform <- genCalYr(chosenStock)
+  yrPerform[,4:5] <- apply(yrPerform[,4:5], 2,
+                           function(x) round(as.numeric(x),2))
+  present <- yrPerform[order(yrPerform[,1], decreasing=TRUE),c(1,4,5)]
+  present
+})
+```
+
+## Blank
+

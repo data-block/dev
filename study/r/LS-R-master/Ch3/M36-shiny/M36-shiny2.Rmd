@@ -1,0 +1,30 @@
+---
+title: "Step 2. Hello Shiny from flexdashboard"
+output: 
+  flexdashboard::flex_dashboard:
+  runtime: shiny
+---
+
+Column {data-width=300}
+-------------------------------------
+
+### Input Panel  
+    
+```{r}
+selectInput("myVar", label = "Choose a number:",
+            choices = c(10, 20, 30), selected = 20)
+```
+    
+    
+Column {data-width=700}  
+-------------------------------------
+### Output Panel  
+
+```{r}
+renderPlot({
+  hist(rnorm(1000), as.numeric(input$myVar))
+})
+```
+
+
+

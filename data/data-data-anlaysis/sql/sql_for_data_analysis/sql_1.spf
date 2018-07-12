@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ContentFilters</key>
+	<dict/>
+	<key>auto_connect</key>
+	<true/>
+	<key>data</key>
+	<dict>
+		<key>connection</key>
+		<dict>
+			<key>database</key>
+			<string>analysis</string>
+			<key>host</key>
+			<string>127.0.0.1</string>
+			<key>kcid</key>
+			<string>-7039953361495765377</string>
+			<key>name</key>
+			<string>root</string>
+			<key>rdbms_type</key>
+			<string>mysql</string>
+			<key>sslCACertFileLocation</key>
+			<string></string>
+			<key>sslCACertFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>sslCertificateFileLocation</key>
+			<string></string>
+			<key>sslCertificateFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>sslKeyFileLocation</key>
+			<string></string>
+			<key>sslKeyFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>type</key>
+			<string>SPTCPIPConnection</string>
+			<key>useSSL</key>
+			<integer>0</integer>
+			<key>user</key>
+			<string>root</string>
+		</dict>
+		<key>session</key>
+		<dict>
+			<key>connectionEncoding</key>
+			<string>utf8</string>
+			<key>contentPageNumber</key>
+			<integer>1</integer>
+			<key>contentSelection</key>
+			<data>
+			YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFy
+			Y2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJX
+			TlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAF
+			gAdUdHlwZVRyb3dzXxAdU2VsZWN0aW9uRGV0YWlsVHlwZU5TSW5k
+			ZXhTZXTSFwsYGVxOU1JhbmdlQ291bnQQAIAG0hscHR5aJGNsYXNz
+			bmFtZVgkY2xhc3Nlc1pOU0luZGV4U2V0oh8gWk5TSW5kZXhTZXRY
+			TlNPYmplY3TSGxwiI1xOU0RpY3Rpb25hcnmiIiBfEA9OU0tleWVk
+			QXJjaGl2ZXLRJidUZGF0YYABAAgAEQAaACMALQAyADcAQABGAE0A
+			VQBgAGcAagBsAG4AcQBzAHUAdwB8AIEAoQCmALMAtQC3ALwAxwDQ
+			ANsA3gDpAPIA9wEEAQcBGQEcASEAAAAAAAACAQAAAAAAAAAoAAAA
+			AAAAAAAAAAAAAAABIw==
+			</data>
+			<key>contentSortColIsAsc</key>
+			<true/>
+			<key>contentViewport</key>
+			<string>{{0, 0}, {694, 450}}</string>
+			<key>isToolbarVisible</key>
+			<true/>
+			<key>queries</key>
+			<string>/*
+##########################################################################################################################################################################
+1. 하나의 값 조작하기
+##########################################################################################################################################################################
+*/
+
+## 1. 코드 값을 레이블로 변경하기 (5-1)
+## 로그 데이터 또는 업무 데이터로 저장된 코드 값을 그대로 집계에 사용하면 리포트의 가독성이 낮아지므로
+## 리포트 작성할 때 변환하는 등의 작업이 필요함.
+## 아에 집계할 때 미리 코드 값을 레이블로 변경하는 쿼리
+
+/* DROP TABLE IF EXISTS mst_users;
+CREATE TABLE mst_users(
+    user_id         varchar(255)
+  , register_date   varchar(255)
+  , register_device integer
+);
+
+INSERT INTO mst_users
+VALUES
+    ('U001', '2016-08-26', 1)
+  , ('U002', '2016-08-26', 2)
+  , ('U003', '2016-08-27', 3)
+; */
+
+
+## 1-1. 코드 값을 레이블로 변경하기
+select 
+	user_id
+    , case
+     	when a.`register_device` = 1 then 'desktop'
+     	when a.`register_device` = 2 then 'mobile'
+     	when a.`register_device` = 3 then 'application'
+     	-- 디폴트 값을 지정할 경우 else 구문을 사용
+     	-- else ''
+     	end as device_name
+from mst_users a;
+
+##########################################################################################################################################################################
+
+## 2. URL에서 요소 추출하기 (5-2)
+/* DROP TABLE IF EXISTS access_log ;
+CREATE TABLE access_log (
+    stamp    varchar(255)
+  , referrer text
+  , url      text
+);
+
+INSERT INTO access_log 
+VALUES
+    ('2016-08-26 12:02:00', 'http://www.other.com/path1/index.php?k1=v1&amp;k2=v2#Ref1', 'http://www.example.com/video/detail?id=001')
+  , ('2016-08-26 12:02:01', 'http://www.other.net/path1/index.php?k1=v1&amp;k2=v2#Ref1', 'http://www.example.com/video#ref'          )
+  , ('2016-08-26 12:02:01', 'https://www.other.com/'                               , 'http://www.example.com/book/detail?id=002' )
+; */
+
+
+## 2-1. 레퍼러로 어떤 웹 페이지를 거쳐 넘어왔는지 판별하기
+## 페이지 단위로 집계하면 밀도가 너무 작아 복잡해지므로 호스트 단위로 집계
+select al.`stamp`
+	-- referrer의 호스트 추출하기
+	-- mysql일 경우
+	, REGEXP_SUBSTR(al.`referrer`, 'https?://([^/]*)')  as referrer_host
+	-- PostgreSQL의 경우
+	-- , substring(referrer, from 'https?://[^/]*') as referrer_host
+	-- Hive, SparkSQL의 경우
+	-- , parse_url(referrer, 'HOST') as referrer_host
+from access_log al
+;
+
+
+## 2-2. URL에서 경로와 요청 매개변수 값 추출하기 (5-3)
+## (로그 데이터로 저장된) URL 경로를 가공해서 상품 리포트 만들기
+## URL 경로와 GET 요청 매개변수에 있는 특정 키를 추출하는 쿼리
+select al.`stamp`
+	, url
+	-- mysql일 경우
+	, regexp_substr(url, '//[^/]+([^?#]+)') as path
+	, regexp_substr(url, 'id=([^&amp;]*)') as id
+from access_log al
+;
+
+
+## 3. 문자열을 배열로 분해하기 (5-4)
+## URL 경로를 슬래시(/)로 분할해서 계층을 추출하는 쿼리
+select
+	stamp
+	, url
+	-- 경로를 슬래시로 잘라 배열로 분할하기
+	-- 경로가 반드시 슬래시로 시작하므로 2번째 요소가 마지막 계층
+	, substring_index(url, '/', 3) as path1
+	, substring_index(url, '.com', -1) as path2
+	, substring_index(substring_index(url, '/', 4), '/', -1) as path3
+	, substring_index(substring_index(url, '.com', 2), '/', -1) as path4
+	, regexp_substr(url, 'id=([^&amp;]*)') as id
+from access_log;
+
+##########################################################################################################################################################################
+
+## 4. 날짜와 타임스탬프 다루기
+## 4-1. 현재 날짜와 타임스탬프 추출하기
+select
+	current_date as dt
+	, now() as now
+	, sysdate(1) as sysdate
+;
+
+
+## 4-2. 지정한 값의 날짜/시각 데이터 추출하기
+-- 문자열을 날짜/타임스탬프로 변환하기 (5-6)
+select
+	cast('2016-01-30' as date) as dt
+	, timestamp('2016-01-30 12:00:00')
+	, timestamp(now())
+;
+
+
+## 4-3. 날짜/시각에서 특정 필드 추출하기 (5-7)
+## 연월 동시 추출하여 월별 리포트 생성
+## extract, substr
+select
+	dt
+	, extract(year from dt) as year
+	, extract(month from dt) as momth
+	, extract(day from dt) as day
+from 
+	(select cast('2016-01-30' as date) as dt) as d
+;
+
+select
+	dt
+	, extract(year from dt) as year
+	, extract(month from dt) as momth
+	, extract(day from dt) as day
+	, extract(hour from dt) as hour
+	, extract(minute from dt) as minute
+	, extract(second from dt) as second
+from
+	(select timestamp(now()) as dt) as d
+;
+
+select
+	substr(dt, 1, 7) as 'year_month'
+from
+	(select cast('2016-01-30' as date) as dt) as d
+;
+
+##########################################################################################################################################################################
+
+## 5. 결손 값을 디폴트 값으로 대치하기
+## 문자열 또는 숫자를 다룰 때는 중간에 null 들어있는 경우를 조심해야함
+## null과 문자열을 결합하거나, 사칙연산을 해도 null이 됨
+
+/* DROP TABLE IF EXISTS purchase_log_with_coupon;
+CREATE TABLE purchase_log_with_coupon (
+    purchase_id varchar(255)
+  , amount      integer
+  , coupon      integer
+);
+
+INSERT INTO purchase_log_with_coupon
+VALUES
+    ('10001', 3280, NULL)
+  , ('10002', 4650,  500)
+  , ('10003', 3870, NULL)
+; */
+
+select
+	purchase_id
+	, amount
+	, coupon
+	, amount - coupon as discount_amount1
+	, amount - coalesce(coupon, 0) as discount_amount2
+from
+	purchase_log_with_coupon
+;
+
+/*
+##########################################################################################################################################################################
+2. 여러 개의 값에 대한 조작
+##########################################################################################################################################################################
+*/
+
+
+##########################################################################################################################################################################
+##########################################################################################################################################################################
+##########################################################################################################################################################################
+##########################################################################################################################################################################
+##########################################################################################################################################################################</string>
+			<key>view</key>
+			<string>SP_VIEW_CUSTOMQUERY</string>
+			<key>windowVerticalDividerPosition</key>
+			<real>214</real>
+		</dict>
+	</dict>
+	<key>encrypted</key>
+	<false/>
+	<key>format</key>
+	<string>connection</string>
+	<key>queryFavorites</key>
+	<array/>
+	<key>queryHistory</key>
+	<array>
+		<string>select al.`stamp`
+	, url
+	-- mysql일 경우
+	, regexp_substr(url, '//[^/]+([^?#]+)') as path
+	, regexp_substr(url, 'id=([^&amp;]*)') as id
+from access_log al</string>
+		<string>select
+	purchase_id
+	, amount
+	, coupon
+	, amount - coupon as discount_amount1
+	, amount - coalesce(coupon, 0) as discount_amount2
+from
+	purchase_log_with_coupon</string>
+		<string>select *
+from purchase_log_with_coupon</string>
+		<string>INSERT INTO purchase_log_with_coupon
+VALUES
+    ('10001', 3280, NULL)
+  , ('10002', 4650,  500)
+  , ('10003', 3870, NULL)</string>
+		<string>DROP TABLE IF EXISTS purchase_log_with_coupon;
+CREATE TABLE purchase_log_with_coupon (
+    purchase_id varchar(255)
+  , amount      integer
+  , coupon      integer
+)</string>
+		<string>select
+	substr(dt, 1, 7) as 'year_month'
+from
+	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select
+	substr(stamp, 1, 7) as 'year_month'
+-- 	substr(dt, 1, 7) as 'year_month'
+from
+	(select cast('2016-01-30' as text) as stamp) as d
+-- 	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select
+	substr(dt, 1, 7) as 'year_month'
+from
+-- 	(select cast('2016-01-30' as text) as stamp) as d
+	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select
+	substr(d, 1, 7) as 'year_month'
+from
+-- 	(select cast('2016-01-30' as text) as stamp) as d
+	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select substr('2016-01-30', 1, 7) as 'year_month'
+from dual</string>
+		<string>select substr('2016-01-30', 1, 7) as year_month
+from dual</string>
+		<string>select substr('2016-01-30', 1, 7)
+from dual</string>
+		<string>select
+	substr(d, 1, 7) as year_month
+from
+-- 	(select cast('2016-01-30' as text) as stamp) as d
+	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select
+	substr(dt, 1, 7) as year_month
+from
+-- 	(select cast('2016-01-30' as text) as stamp) as d
+	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select
+-- 	substr(dt, 1, 7) as year_month	
+	*
+from
+-- 	(select cast('2016-01-30' as text) as stamp) as d
+	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select
+-- 	substr(dt, 1, 7) as year_month	
+	*
+from
+	(select cast('2016-01-30' as string) as stamp) as d</string>
+		<string>select
+-- 	substr(dt, 1, 7) as year_month	
+	*
+from
+	(select cast('2016-01-30' as text) as stamp) as d</string>
+		<string>select
+	substr(dt, 1, 7) as year_month	
+from
+-- 	(select cast('2016-01-30' as text) as timestamp) as d
+	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select
+	substr(d, 1, 7) as year_month	
+from
+-- 	(select cast('2016-01-30' as text) as timestamp) as d
+	(select cast('2016-01-30' as date) as dt) as d</string>
+		<string>select
+	substring(d, 1, 7) as year_month	
+from
+	(select cast('2016-01-30' as text) as timestamp) as d
+-- 	(select cast('2016-01-30' as date) as dt) as d</string>
+	</array>
+	<key>rdbms_type</key>
+	<string>mysql</string>
+	<key>rdbms_version</key>
+	<string>8.0.11</string>
+	<key>version</key>
+	<integer>1</integer>
+</dict>
+</plist>

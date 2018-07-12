@@ -1,0 +1,25 @@
+---
+title: "Step 1. Hello Shiny"
+author: "LearningSpoonsR"
+date: "`r Sys.Date()`"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r eruptions, echo=FALSE}
+inputPanel(
+  selectInput("myVar", label = "Choose a number:",
+              choices = c(10, 20, 30), selected = 20)
+)
+
+renderText({
+  input$myVar
+})
+```
+
+
+

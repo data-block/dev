@@ -1,0 +1,273 @@
+---
+title: "L1"
+author: "Sim"
+date: "2018년 4월 15일"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Module 1 - Hello World
+
+```{r, eval=FALSE}
+Hello World
+```
+```{r, echo=FALSE}
+x <- "Error: unexpected symbol in \"Hello World\""
+cat(x)
+```
+br
+```{r}
+"Hello World"
+```
+br  
+```{r}
+greeting <- "Hello World"
+greeting
+```
+br
+```{r, eval=FALSE}
+greeting + "Sir"
+```
+```{r, echo=FALSE}
+x <- "Error in greeting + \"Sir\""
+y <- ": non-numeric argument to binary operator"
+cat(x)
+cat(y)
+```
+br
+```{r}
+paste(greeting, "Sir")
+paste(greeting, "!")
+paste0(greeting, "!")
+paste(greeting, "!", sep="")
+```
+br
+```{r, eval=FALSE}
+paste1(greeting, "sir")
+```
+```{r, echo=FALSE}
+x <- "Error in paste1(greeting, \"sir\")" 
+y <- ": could not find function \"paste1\""
+cat(x)
+cat(y)
+```
+br
+
+
+## Data Type - 1. string (character)
+
+```{r}
+greeting <- "R says \"Hello World!\""
+nchar(greeting)
+substr(greeting,3,6)
+greeting
+cat(greeting)
+```
+br
+```{r, eval=FALSE}
+paste(string1,string2)
+paste0(string1,string2,sep)
+nchar(string)
+substr(string,start,end)
+cat(string)
+```
+
+## Data Type - 2. numeric
+
+```{r}
+10^2 + 36
+a = 4
+a
+a*5
+a = a + 10
+a
+```
+
+## Data Type - 3. logical
+```{r}
+2==3
+5>3
+```
+
+## Data Type - Type checking and conversion
+```{r}
+is.character(5)
+is.character("5")
+a <- as.character(5)
+is.character(a)
+b <- as.numeric(a)
+is.numeric(b)
+as.numeric(2==3)
+```
+
+## Data Type - Summary
+
+## Data Structure - 1. vector (1/3)
+
+```{r}
+strVec1 <- c("Hello", "Hi", "What's up")
+cbind(strVec1)
+strVec2 <- c("Ma'am", "Sir", "Your Honor")
+cbind(strVec2)
+strVec3 <- paste(strVec1, strVec2)
+cbind(strVec3)
+```
+
+## Data Structure - 1. vector (2/3)
+```{r}
+numVec1 <- c(30,50,70)
+numVec1
+numVec2 <- seq(30,70,20)
+numVec2
+numVec3 <- c(25,55,80)
+numVec3
+numVec4 <- seq(from=20, to=1, by=-3)
+numVec4
+2:6
+```
+
+## Data Structure - 1. vector (3/3)
+
+```{r}
+min(numVec1)
+min(numVec1,numVec3)
+pmin(numVec1,numVec3)
+pmin(numVec1 > numVec3)
+numVec1[2]
+numVec1[-2]
+numVec1[1:2]
+numVec1[c(1,3)]
+```
+
+## Data Structure - 2. matrix
+
+```{r}
+mat=matrix(data=c(9,2,3,4,5,6),ncol=3)
+mat
+mat[1,2]
+mat[2,]
+mean(mat)
+apply(mat,2,mean)
+apply(mat,1,mean)
+```
+
+## Data Structure - 3. data.frame (1/2)
+
+```{r}
+weather <-
+  data.frame(date = c("2017-8-31","2017-9-1","2017-9-2"),
+             sky  = c("Sunny", "Cloudy", "Rainy"), 
+             temp = c(20,15,18))
+weather
+colnames(weather)
+weather$sky
+weather$sky==weather[,2]
+```
+
+## Data Structure - 3. data.frame (2/2)
+
+```{r}
+class(weather$date)
+weather$date <- as.Date(weather$date)
+weather$sky <- as.character(weather$sky)
+weather
+sapply(weather, class)
+
+```
+
+## Data Structure - 4. list
+```{r}
+drwon <- list(numJobs = c(1,3),
+              car     = c("Mercedez","Porche","Kia"),
+              hobby   = c("golf", "squash"))
+drwon
+names(drwon)
+drwon[[1]]
+drwon$numJobs * c(10,5)
+```
+
+## Data Structure - Summary
+
+## Data Type - 4. factor
+
+범주형 자료 (Categorical Data)
+
+Group별 특성을 표현 
+ex) Learning Spoons: Finance, Programming, Data Science,...
+ex) GICS 산업 분류, Industry grouping, 산업별 수익률 평균 등
+String 변수와의 차이점  
+
+String & Factor \\
+message & classification, category, group\\
+name, 자체로 의미 & attribute, 다른 group과의 차이로서의 의미 \\
+일반적으로 unique & 일반적으로 많은 비슷한 것들이 있음. \\
+
+## Data Type - 5. Date
+
+```{r}
+mydates <- as.Date(c("2007-06-22", "2004-02-13"))
+mydates[1] - mydates[2]
+today <- Sys.Date( )
+today
+as.numeric(substr(today,1,4)) # year # substr works for date
+as.numeric(substr(today,6,7)) # month
+as.numeric(substr(today,9,10)) # day
+format(today, format="%B %d %Y")
+## lubridate package
+```
+
+## Date Type - 일반적인 방법
+
+String, Factor, Date간의 변환
+
+R에서는 data.frame을 생성할 때 문자로된 데이터를 자동으로 **factor**로 처리함.
+
+1. 따라서 `stringsAsFactors=FALSE`의 option을 data.frame 생성시 추가! (그리고 factor 변수로 원할때에 `as.factor()`를 사용하여 변환)
+
+2. 날짜인데 String으로 분류된 변수들에 대해서 `as.Date()`를 이용하여 type을 변환!
+
+## Date Type
+
+* 데이터 타입은 총 몇개인가요? 이것들을 다 외어야 하나요??
+
+* 지금까지 커버된 5개 데이터 타입은 자주 쓰이고 중요함
+
+* 그러나 데이터 타입은 무한대... 
+
+* 심지어 새로운 패키지마다 그 패키지의 클래스(class)에 적합한 데이터 타입을 나름대로 정의하기도 함
+
+* 마주칠 때마다 검색하여 *대충* 필요한 만큼 알아보고 필요한 부분만 사용하는 것이 프로그래밍
+
+## 실습 과제
+
+```{r, eval=FALSE}
+function <- tree(h) {
+  ...
+  ...
+  ...
+  ...
+  ...
+}
+```
+
+```{r, echo=FALSE}
+tree <- function(h) {
+  for (i in 1:h) {
+    numBlanks <- h-i
+    blanks    <- rep(" ", numBlanks)
+    blanks    <- paste0(blanks, collapse="")
+    numAs     <- 2*i-1
+    As        <- rep("A", numAs)
+    As        <- paste0(As, collapse="")
+    print(paste0(blanks, As, blanks))
+  }
+}
+```
+execute
+```{r}
+tree(4)
+tree(6)
+```

@@ -1,0 +1,98 @@
+---
+title: "Word Cloud (eng) - sequantial design"
+author: "Sim"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
+## 0. Setup  
+
+```{r}
+library(tm) # for text mining
+library(SnowballC) # for text stemming
+library(wordcloud) # word-cloud generator 
+library(RColorBrewer) # color palettes
+library(ggplot2)
+library(dplyr)
+# activate(c("tm", "SnowballC"))
+```
+
+## 1. Infile and prepare text (`docs`)  
+
+```{r}
+filePath <- paste0("http://www.sthda.com/sthda/RDoc/example-files/",
+                   "martin-luther-king-i-have-a-dream-speech.txt")
+text <- readLines(filePath)
+docs <- Corpus(VectorSource(text))
+# inspect(docs)
+```
+
+## 2. Cleanup the text (`docs`)  
+
+```{r}
+# `dplyr` way
+toSpace <- content_transformer(
+  function (x , pattern) gsub(pattern, " ", x))
+docs <- docs %>% 
+  tm_map(toSpace, "/") %>%
+  tm_map(toSpace, "@") %>%
+  tm_map(toSpace, "\\|")
+```
+
+```{r, eval=FALSE}
+# `base` way
+toSpace <- content_transformer(
+  function (x , pattern) gsub(pattern, " ", x))
+docs <- tm_map(docs, toSpace, "/")
+docs <- tm_map(docs, toSpace, "@")
+docs <- tm_map(docs, toSpace, "\\|")
+```
+
+```{r}
+docs <- docs %>% 
+  tm_map(content_transformer(tolower)) %>%         # Convert it to lower case
+  tm_map(removeNumbers) %>%                        # Remove numbers
+  tm_map(removeWords, stopwords("english")) %>%    # Remove english common stopwords
+  tm_map(removeWords, c("blabla1", "blabla2")) %>% # Remove your own stop word
+  tm_map(removePunctuation) %>%                    # Remove punctuations    
+  tm_map(stripWhitespace)                          # Eliminate extra white spaces
+```
+
+## 3. Arriving to frequency table! (`docs` to `freqTable`)
+
+```{r}
+termMat   <- TermDocumentMatrix(docs)
+termTable <- as.matrix(termMat)
+head(termTable, 2)
+freqTable <- data.frame(word = rownames(termTable),
+                        freq = rowSums(termTable))
+freqTable$word <- rownames(freqTable)
+freqTable <- freqTable %>% arrange(desc(freq))
+head(freqTable, 2)
+```
+
+## 4. Render Bar Chart  (play with `freqTable`)
+
+```{r}
+ggplot(data = head(freqTable,20)) +
+  geom_bar(aes(x=reorder(word, freq), y=freq), stat="identity") +
+  coord_flip()
+```
+
+## 5. Render Word Cloud (play with `freqTable`)
+
+```{r, warning = FALSE}
+wordcloud(words = freqTable$word, freq = freqTable$freq, 
+          min.freq = 1, max.words=200, random.order=FALSE, rot.per=0.35, 
+          colors=brewer.pal(8, "Dark2"))
+```          
+
+## 6. Reference  
+
+<http://www.sthda.com/english/wiki/text-mining-and-word-cloud-fundamentals-in-r-5-simple-steps-you-should-know>  

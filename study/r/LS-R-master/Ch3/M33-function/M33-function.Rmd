@@ -1,0 +1,101 @@
+---
+title: "M33-function"
+author: "LearningSpoonsR"
+date: "2018년 5월 21일"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+## I. Dream
+
+```{r}
+## 2. Cleanup the text (`docs`) 
+toSpace <- content_transformer(
+  function (x , pattern) gsub(pattern, " ", x))
+docs <- docs %>% 
+  tm_map(toSpace, "/") %>%
+  tm_map(toSpace, "@") %>%
+  tm_map(toSpace, "\\|")
+```
+
+```{r}
+docs <- docs %>% 
+  tm_map(content_transformer(tolower)) %>%         # Convert it to lower case
+  tm_map(removeNumbers) %>%                        # Remove numbers
+  tm_map(removeWords, stopwords("english")) %>%    # Remove english common stopwords
+  tm_map(removeWords, c("blabla1", "blabla2")) %>% # Remove your own stop word
+  tm_map(removePunctuation) %>%                    # Remove punctuations    
+  tm_map(stripWhitespace)                          # Eliminate extra white spaces
+```
+
+```{r}
+## 3. Arriving to frequency table! (`docs` to `freqTable`)
+termMat   <- TermDocumentMatrix(docs)
+termTable <- as.matrix(termMat)
+head(termTable, 2)
+freqTable <- data.frame(word = rownames(termTable),
+                        freq = rowSums(termTable))
+freqTable$word <- rownames(freqTable)
+freqTable <- freqTable %>% arrange(desc(freq))
+head(freqTable, 2)
+```
+
+## II. Sonaki
+
+```{r}
+## 2. Cleanup the text (`docs`)  
+text <- pdf_text("../script/sonaki.pdf")
+docs <- sapply(text, extractNoun, USE.NAMES = F) # Apply extract Noun
+docs <- unlist(docs)
+docs <- Filter(function(x) {nchar(x) >= 2}, docs) # Character length >= 2
+head(docs, 10)
+```
+
+```{r}
+## 3. Arriving to frequency table! (`docs` to `freqTable`)
+freqTable <- data.frame(table(docs))
+names(freqTable) <- c("word", "freq")
+freqTable <- freqTable %>% arrange(desc(freq))
+head(freqTable)
+```
+
+## III. Function!
+
+```{r}
+cleanDocsGenerateFreqTable <- function(docs, lang) {
+  activate(c("tm", "SnowballC", "wordcloud", "KoNLP", "pdftools"))
+  activate(c("ggplot2", "dplyr", "RColorBrewer"))
+  if (lang == "kr") {
+    docs <- unlist(docs)
+    docs <- Filter(function(x) {nchar(x) >= 2}, docs) # Character length >= 2
+    freqTable <- data.frame(table(docs))
+    names(freqTable) <- c("word", "freq")
+    freqTable <- freqTable %>% arrange(desc(freq))
+  } else { # lang == "en"
+    toSpace <- content_transformer(
+      function (x , pattern) gsub(pattern, " ", x))
+    docs <- docs %>% 
+      tm_map(toSpace, "/") %>%
+      tm_map(toSpace, "@") %>%
+      tm_map(toSpace, "\\|")
+    docs <- docs %>% 
+      tm_map(content_transformer(tolower)) %>%         # Convert it to lower case
+      tm_map(removeNumbers) %>%                        # Remove numbers
+      tm_map(removeWords, stopwords("english")) %>%    # Remove english common stopwords
+      tm_map(removeWords, c("blabla1", "blabla2")) %>% # Remove your own stop word
+      tm_map(removePunctuation) %>%                    # Remove punctuations    
+      tm_map(stripWhitespace)                          # Eliminate extra white spaces
+    termMat   <- TermDocumentMatrix(docs)
+    termTable <- as.matrix(termMat)
+    freqTable <- data.frame(word = rownames(termTable),
+                            freq = rowSums(termTable))
+    freqTable$word <- rownames(freqTable)
+    freqTable <- freqTable %>% arrange(desc(freq))
+  }
+  return(freqTable)
+}
+```  
+
